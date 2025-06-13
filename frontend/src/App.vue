@@ -49,6 +49,13 @@ export default {
 </template>
 
 <style>
+body {
+  background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
+  font-family: 'Inter', 'Roboto', Arial, sans-serif;
+}
+.v-application {
+  background: transparent !important;
+}
 .text-decoration-none {
   text-decoration: none;
 }

@@ -1,18 +1,22 @@
 <template>
-  <v-container>
+  <v-container class="report-bg" fluid>
     <v-row justify="center">
       <v-col cols="12" md="10">
-        <v-card class="mt-5">
-          <v-card-title class="text-center text-h5 py-4">
+        <v-card class="mt-10 mx-auto pa-8 report-card" max-width="1100" elevation="12">
+          <v-card-title class="text-center text-h4 font-weight-bold mb-2 report-title">
+            <v-icon left color="primary" size="36">mdi-format-list-bulleted-square</v-icon>
             Daftar Laporan Kekerasan
           </v-card-title>
-          
+          <v-divider class="mb-6"></v-divider>
           <v-card-text>
             <v-alert
               v-if="error"
               type="error"
-              class="mb-4"
+              class="mb-4 soft-alert"
+              border="left"
+              elevation="2"
             >
+              <v-icon left>mdi-alert-circle</v-icon>
               {{ error }}
             </v-alert>
 
@@ -21,46 +25,50 @@
                 color="error"
                 variant="outlined"
                 @click="logout"
+                class="logout-btn"
               >
+                <v-icon left>mdi-logout</v-icon>
                 Logout
               </v-btn>
             </div>
 
-            <v-table>
-              <thead>
-                <tr>
-                  <th>No.</th>
-                  <th>Jenis Kekerasan</th>
-                  <th>Lokasi</th>
-                  <th>Tanggal</th>
-                  <th>Hash Bukti</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="loading" class="text-center">
-                  <td colspan="5">
-                    <v-progress-circular
-                      indeterminate
-                      color="primary"
-                    ></v-progress-circular>
-                  </td>
-                </tr>
-                <tr v-else-if="reports.length === 0">
-                  <td colspan="5" class="text-center">
-                    Belum ada laporan
-                  </td>
-                </tr>
-                <tr v-else v-for="(report, index) in reports" :key="report.fileHash">
-                  <td>{{ index + 1 }}</td>
-                  <td>{{ report.violenceType }}</td>
-                  <td>{{ report.location }}</td>
-                  <td>{{ formatDate(report.date) }}</td>
-                  <td class="text-truncate" style="max-width: 200px;">
-                    {{ report.fileHash }}
-                  </td>
-                </tr>
-              </tbody>
-            </v-table>
+            <div class="table-responsive">
+              <v-table class="modern-table" density="comfortable">
+                <thead>
+                  <tr>
+                    <th style="width: 60px;">No.</th>
+                    <th style="width: 220px;">Jenis Kekerasan</th>
+                    <th style="width: 180px;">Lokasi</th>
+                    <th style="width: 180px;">Tanggal</th>
+                    <th style="min-width: 320px;">Hash Bukti</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="loading" class="text-center">
+                    <td colspan="5">
+                      <v-progress-circular
+                        indeterminate
+                        color="primary"
+                      ></v-progress-circular>
+                    </td>
+                  </tr>
+                  <tr v-else-if="reports.length === 0">
+                    <td colspan="5" class="text-center">
+                      Belum ada laporan
+                    </td>
+                  </tr>
+                  <tr v-else v-for="(report, index) in reports" :key="report.fileHash" class="table-row">
+                    <td><v-chip color="primary" variant="tonal">{{ index + 1 }}</v-chip></td>
+                    <td><v-icon left small color="deep-orange">mdi-alert-octagon</v-icon> {{ report.violenceType }}</td>
+                    <td><v-icon left small color="blue">mdi-map-marker</v-icon> {{ report.location }}</td>
+                    <td><v-icon left small color="green">mdi-calendar</v-icon> {{ formatDate(report.date) }}</td>
+                    <td class="hash-cell">
+                      {{ report.fileHash }}
+                    </td>
+                  </tr>
+                </tbody>
+              </v-table>
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -125,4 +133,51 @@ export default {
     };
   }
 };
-</script> 
+</script>
+
+<style scoped>
+.report-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+.report-card {
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(31, 41, 55, 0.12);
+  background: #fff;
+}
+.report-title {
+  color: #1e293b;
+  letter-spacing: 1px;
+}
+.soft-alert {
+  border-radius: 8px;
+  font-size: 1.05rem;
+}
+.logout-btn {
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.modern-table {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+  box-shadow: 0 2px 8px 0 #2563eb11;
+  min-width: 900px;
+}
+.table-row:hover {
+  background: #e0e7ff44;
+  transition: background 0.2s;
+}
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+.hash-cell {
+  max-width: 400px;
+  white-space: normal;
+  word-break: break-all;
+}
+</style> 
