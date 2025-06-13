@@ -17,6 +17,14 @@
               ></v-select>
 
               <v-text-field
+                v-if="formData.violenceType === 'Lainnya'"
+                v-model="formData.violenceTypeOther"
+                label="Jenis Kekerasan (Lainnya)"
+                required
+                :rules="[v => !!v || 'Jenis kekerasan harus diisi']"
+              />
+
+              <v-text-field
                 v-model="formData.location"
                 label="Lokasi Kejadian"
                 required
@@ -33,10 +41,10 @@
 
               <v-file-input
                 v-model="formData.file"
-                label="Upload Bukti (PDF)"
-                accept=".pdf"
+                label="Upload Bukti (PDF, Gambar, atau Video)"
+                accept=".pdf,image/*,video/*"
                 :rules="[
-                  v => !v || v.size < 5000000 || 'File harus kurang dari 5MB'
+                  v => !v || v.size < 20000000 || 'File harus kurang dari 20MB'
                 ]"
               ></v-file-input>
 
@@ -88,6 +96,7 @@ export default {
 
     const formData = reactive({
       violenceType: '',
+      violenceTypeOther: '',
       location: '',
       date: '',
       file: null
@@ -113,7 +122,10 @@ export default {
 
       try {
         const formDataToSend = new FormData();
-        formDataToSend.append('violenceType', formData.violenceType);
+        formDataToSend.append(
+          'violenceType',
+          formData.violenceType === 'Lainnya' ? formData.violenceTypeOther : formData.violenceType
+        );
         formDataToSend.append('location', formData.location);
         formDataToSend.append('date', formData.date);
         
