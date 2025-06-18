@@ -27,8 +27,8 @@ Sistem pelaporan kekerasan berbasis blockchain untuk mendukung SDGs 5 (Kesetaraa
 ```bash
 cd contracts
 npm install
-npm run node  # Jalankan di terminal terpisah
-npm run deploy:local  # Jalankan di terminal baru
+npm run node 
+npm run deploy:local 
 ```
 
 Salin alamat kontrak yang didapat dari hasil deploy.

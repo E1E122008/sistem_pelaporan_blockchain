@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
+const { hashReportData } = require('../services/file.service');
 
 class FileService {
     constructor() {

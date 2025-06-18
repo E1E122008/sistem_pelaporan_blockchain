@@ -4,30 +4,43 @@ const multer = require('multer');
 const { adminAuth } = require('../middleware/auth.middleware');
 const blockchainService = require('../services/blockchain.service');
 const fileService = require('../services/file.service');
+const { hashReportData } = require('../utils/hashReport');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Submit a new report (public)
 router.post('/submit', upload.single('file'), async (req, res) => {
     try {
-        const { violenceType, location, date } = req.body;
-        
-        let fileHash = '';
+        const { violenceType, location, relationWithPerpetrator, date } = req.body;
+        let fileName = '';
         if (req.file) {
-            const fileResult = await fileService.saveFile(req.file);
-            fileHash = fileResult.hash;
+            await fileService.saveFile(req.file);
+            fileName = req.file.originalname;
         }
-
-        await blockchainService.submitReport(
+        const dataString = `${violenceType}|${location}|${relationWithPerpetrator}|${new Date(date).getTime()}|${fileName}`;
+        const reportHash = hashReportData(
             violenceType,
             location,
+            relationWithPerpetrator,
             new Date(date).getTime(),
-            fileHash
+            fileName
+        );
+        console.log('DATA STRING UNTUK HASH:', dataString);
+        console.log('HASH GABUNGAN:', reportHash);
+
+        await blockchainService.submitReport(
+            reportHash,
+            violenceType,
+            location,
+            relationWithPerpetrator,
+            new Date(date).getTime(),
+            fileName
         );
 
         res.status(201).json({
             message: 'Report submitted successfully',
-            fileHash
+            reportHash,
+            dataString
         });
     } catch (error) {
         console.error('Error submitting report:', error);
@@ -35,11 +48,15 @@ router.post('/submit', upload.single('file'), async (req, res) => {
     }
 });
 
-// Verify a report by hash (public)
+// Verify a report by hash (public) - returns report details if exists
 router.get('/verify/:hash', async (req, res) => {
     try {
-        const exists = await blockchainService.verifyReport(req.params.hash);
-        res.json({ exists });
+        const report = await blockchainService.getReport(req.params.hash);
+        if (report) {
+            res.json(report);
+        } else {
+            res.status(404).json({ error: 'Report not found' });
+        }
     } catch (error) {
         console.error('Error verifying report:', error);
         res.status(500).json({ error: 'Failed to verify report' });
@@ -47,7 +64,7 @@ router.get('/verify/:hash', async (req, res) => {
 });
 
 // Get all reports (admin only)
-router.get('/', adminAuth, async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const reports = await blockchainService.getAllReports();
         res.json(reports);
@@ -61,10 +78,24 @@ router.get('/', adminAuth, async (req, res) => {
 router.get('/details/:hash', adminAuth, async (req, res) => {
     try {
         const report = await blockchainService.getReport(req.params.hash);
-        res.json(report);
+        if (report) {
+            res.json(report);
+        } else {
+            res.status(404).json({ error: 'Report not found' });
+        }
     } catch (error) {
         console.error('Error getting report details:', error);
         res.status(500).json({ error: 'Failed to get report details' });
+    }
+});
+
+// Endpoint debug: tampilkan semua hash laporan di contract
+router.get('/all-hashes', async (req, res) => {
+    try {
+        const hashes = await blockchainService.contract.getAllReportHashes();
+        res.json(hashes);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to get all hashes' });
     }
 });
 

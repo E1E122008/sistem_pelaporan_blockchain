@@ -1,119 +1,167 @@
 <template>
-  <v-container class="report-bg" fluid>
-    <v-row justify="center">
-      <v-col cols="12" md="8">
-        <v-card class="mt-10 mx-auto pa-8 report-card" max-width="520" elevation="12">
-          <v-card-title class="text-center text-h4 font-weight-bold mb-2 report-title">
-            <v-icon left color="primary" size="36">mdi-shield-account</v-icon>
-            Form Pelaporan Kekerasan
-          </v-card-title>
-          <v-divider class="mb-6"></v-divider>
-          <v-card-text>
-            <v-form @submit.prevent="submitReport" ref="form">
-              <v-select
-                v-model="formData.violenceType"
-                :items="violenceTypes"
-                label="Jenis Kekerasan"
-                prepend-inner-icon="mdi-alert-octagon"
-                required
-                :rules="[v => !!v || 'Jenis kekerasan harus dipilih']"
-                class="mb-4"
-                variant="outlined"
-                color="primary"
-              ></v-select>
+  <div class="form-container">
+    <div class="form-background">
+      <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+    </div>
+    
+    <div class="form-content">
+      <div class="form-card">
+        <div class="form-header">
+          <div class="header-icon">
+            <v-icon size="48" color="primary">mdi-shield-account</v-icon>
+          </div>
+          <h1 class="form-title">Form Pelaporan Kekerasan</h1>
+          <p class="form-subtitle">Laporkan kasus kekerasan dengan aman dan terjamin kerahasiaannya</p>
+        </div>
 
-              <v-text-field
-                v-if="formData.violenceType === 'Lainnya'"
-                v-model="formData.violenceTypeOther"
-                label="Jenis Kekerasan (Lainnya)"
-                prepend-inner-icon="mdi-pencil"
-                required
-                :rules="[v => !!v || 'Jenis kekerasan harus diisi']"
-                class="mb-4"
-                variant="outlined"
-                color="primary"
-              />
+        <v-form @submit.prevent="submitReport" ref="form" class="form-body">
+          <div class="form-grid">
+            <div class="form-column">
+              <div class="input-group">
+                <label class="input-label">Jenis Kekerasan</label>
+                <v-select
+                  v-model="formData.violenceType"
+                  :items="violenceTypes"
+                  placeholder="Pilih jenis kekerasan"
+                  prepend-inner-icon="mdi-alert-octagon"
+                  required
+                  :rules="[v => !!v || 'Jenis kekerasan harus dipilih']"
+                  variant="outlined"
+                  color="primary"
+                  class="modern-input"
+                ></v-select>
+              </div>
 
-              <v-text-field
-                v-model="formData.location"
-                label="Lokasi Kejadian"
-                prepend-inner-icon="mdi-map-marker"
-                required
-                :rules="[v => !!v || 'Lokasi harus diisi']"
-                class="mb-4"
-                variant="outlined"
-                color="primary"
-              ></v-text-field>
+              <div class="input-group" v-if="formData.violenceType === 'Lainnya'">
+                <label class="input-label">Jenis Kekerasan (Lainnya)</label>
+                <v-text-field
+                  v-model="formData.violenceTypeOther"
+                  placeholder="Jelaskan jenis kekerasan lainnya"
+                  prepend-inner-icon="mdi-pencil"
+                  required
+                  :rules="[v => !!v || 'Jenis kekerasan harus diisi']"
+                  variant="outlined"
+                  color="primary"
+                  class="modern-input"
+                />
+              </div>
 
-              <v-text-field
-                v-model="formData.date"
-                label="Tanggal Kejadian"
-                type="date"
-                prepend-inner-icon="mdi-calendar"
-                required
-                :rules="[v => !!v || 'Tanggal harus diisi']"
-                class="mb-4"
-                variant="outlined"
-                color="primary"
-              ></v-text-field>
+              <div class="input-group">
+                <label class="input-label">Lokasi Kejadian</label>
+                <v-text-field
+                  v-model="formData.location"
+                  placeholder="Masukkan lokasi kejadian"
+                  prepend-inner-icon="mdi-map-marker"
+                  required
+                  :rules="[v => !!v || 'Lokasi harus diisi']"
+                  variant="outlined"
+                  color="primary"
+                  class="modern-input"
+                ></v-text-field>
+              </div>
+            </div>
 
+            <div class="form-column">
+              <div class="input-group">
+                <label class="input-label">Hubungan dengan Pelaku</label>
+                <v-text-field
+                  v-model="formData.relationWithPerpetrator"
+                  placeholder="Contoh: Pasangan, Keluarga, dll"
+                  prepend-inner-icon="mdi-account-group"
+                  required
+                  :rules="[v => !!v || 'Hubungan harus diisi']"
+                  variant="outlined"
+                  color="primary"
+                  class="modern-input"
+                ></v-text-field>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">Tanggal Kejadian</label>
+                <v-text-field
+                  v-model="formData.date"
+                  type="date"
+                  placeholder="Pilih tanggal kejadian"
+                  prepend-inner-icon="mdi-calendar"
+                  required
+                  :rules="[v => !!v || 'Tanggal harus diisi']"
+                  variant="outlined"
+                  color="primary"
+                  class="modern-input"
+                ></v-text-field>
+              </div>
+            </div>
+          </div>
+
+          <div class="file-upload-section">
+            <label class="input-label">Upload Bukti</label>
+            <div class="file-upload-card">
               <v-file-input
                 v-model="formData.file"
-                label="Upload Bukti (PDF, Gambar, atau Video)"
+                placeholder="Upload file bukti (PDF, Gambar, atau Video)"
                 prepend-icon="mdi-paperclip"
                 accept=".pdf,image/*,video/*"
                 :rules="[
                   v => !v || v.size < 20000000 || 'File harus kurang dari 20MB'
                 ]"
-                class="mb-4"
                 variant="outlined"
                 color="primary"
                 show-size
                 chips
+                class="modern-file-input"
               ></v-file-input>
-
-              <v-alert
-                v-if="error"
-                type="error"
-                class="mb-4 soft-alert"
-                border="left"
-                elevation="2"
-              >
-                <v-icon left>mdi-alert-circle</v-icon>
-                {{ error }}
-              </v-alert>
-
-              <v-alert
-                v-if="success"
-                type="success"
-                class="mb-4 soft-alert"
-                border="left"
-                elevation="2"
-              >
-                <v-icon left>mdi-check-circle</v-icon>
-                {{ success }}
-              </v-alert>
-
-              <div class="d-flex justify-center mt-6">
-                <v-btn
-                  color="primary"
-                  class="gradient-btn"
-                  type="submit"
-                  :loading="loading"
-                  size="x-large"
-                  elevation="6"
-                  style="border-radius: 10px; font-weight: 700; letter-spacing: 1px; min-width: 200px;"
-                >
-                  <v-icon left>mdi-send</v-icon>
-                  Submit Laporan
-                </v-btn>
+              <div class="file-info">
+                <v-icon color="info" class="mr-2">mdi-information</v-icon>
+                <span>Format yang didukung: PDF, JPG, PNG, MP4. Maksimal 20MB</span>
               </div>
-            </v-form>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+            </div>
+          </div>
+
+          <div class="form-alerts">
+            <v-alert
+              v-if="error"
+              type="error"
+              class="modern-alert"
+              border="left"
+              elevation="2"
+            >
+              <v-icon left>mdi-alert-circle</v-icon>
+              {{ error }}
+            </v-alert>
+
+            <v-alert
+              v-if="success"
+              type="success"
+              class="modern-alert"
+              border="left"
+              elevation="2"
+            >
+              <v-icon left>mdi-check-circle</v-icon>
+              {{ success }}
+            </v-alert>
+          </div>
+
+          <div class="form-actions">
+            <v-btn
+              color="primary"
+              class="submit-btn"
+              type="submit"
+              :loading="loading"
+              size="x-large"
+              elevation="6"
+            >
+              <v-icon left>mdi-send</v-icon>
+              Submit Laporan
+            </v-btn>
+          </div>
+        </v-form>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -132,6 +180,7 @@ export default {
       violenceType: '',
       violenceTypeOther: '',
       location: '',
+      relationWithPerpetrator: '',
       date: '',
       file: null
     });
@@ -161,6 +210,7 @@ export default {
           formData.violenceType === 'Lainnya' ? formData.violenceTypeOther : formData.violenceType
         );
         formDataToSend.append('location', formData.location);
+        formDataToSend.append('relationWithPerpetrator', formData.relationWithPerpetrator);
         formDataToSend.append('date', formData.date);
         
         if (formData.file) {
@@ -168,7 +218,7 @@ export default {
         }
 
         const response = await apiService.submitReport(formDataToSend);
-        success.value = 'Laporan berhasil dikirim. Hash bukti: ' + response.fileHash;
+        success.value = 'Laporan berhasil dikirim. Hash bukti: ' + response.reportHash;
         
         // Reset form
         form.value.reset();
@@ -194,31 +244,199 @@ export default {
 </script>
 
 <style scoped>
-.report-bg {
+.form-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
-  padding-top: 40px;
-  padding-bottom: 40px;
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
 }
-.report-card {
-  border-radius: 18px;
-  box-shadow: 0 8px 32px 0 rgba(31, 41, 55, 0.12);
-  background: #fff;
+
+.form-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
 }
-.report-title {
+
+.floating-shapes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  animation: float 6s ease-in-out infinite;
+}
+
+.shape-1 {
+  width: 80px;
+  height: 80px;
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.shape-2 {
+  width: 120px;
+  height: 120px;
+  top: 60%;
+  right: 10%;
+  animation-delay: 2s;
+}
+
+.shape-3 {
+  width: 60px;
+  height: 60px;
+  top: 40%;
+  left: 50%;
+  animation-delay: 4s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+.form-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 30px;
+  padding: 50px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.header-icon {
+  margin-bottom: 20px;
+}
+
+.form-title {
+  font-size: 2.5rem;
+  font-weight: 700;
   color: #1e293b;
-  letter-spacing: 1px;
+  margin-bottom: 10px;
 }
-.gradient-btn {
-  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%) !important;
-  color: #fff !important;
-  transition: box-shadow 0.2s;
+
+.form-subtitle {
+  font-size: 1.1rem;
+  color: #64748b;
+  max-width: 500px;
+  margin: 0 auto;
 }
-.gradient-btn:hover {
-  box-shadow: 0 4px 20px 0 #2563eb33;
+
+.form-body {
+  max-width: 1000px;
+  margin: 0 auto;
 }
-.soft-alert {
-  border-radius: 8px;
-  font-size: 1.05rem;
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.input-group {
+  margin-bottom: 25px;
+}
+
+.input-label {
+  display: block;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.modern-input {
+  border-radius: 12px;
+}
+
+.file-upload-section {
+  margin-bottom: 30px;
+}
+
+.file-upload-card {
+  background: #f8fafc;
+  border-radius: 15px;
+  padding: 25px;
+  border: 2px dashed #cbd5e1;
+  transition: all 0.3s ease;
+}
+
+.file-upload-card:hover {
+  border-color: #667eea;
+  background: #f1f5f9;
+}
+
+.modern-file-input {
+  margin-bottom: 15px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.form-alerts {
+  margin-bottom: 30px;
+}
+
+.modern-alert {
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+.form-actions {
+  text-align: center;
+}
+
+.submit-btn {
+  background: linear-gradient(45deg, #667eea, #764ba2) !important;
+  color: white !important;
+  border-radius: 15px;
+  font-weight: 600;
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .form-card {
+    padding: 30px 20px;
+  }
+  
+  .form-title {
+    font-size: 2rem;
+  }
 }
 </style> 

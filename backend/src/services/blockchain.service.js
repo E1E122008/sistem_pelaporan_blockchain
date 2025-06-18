@@ -2,6 +2,10 @@ const { ethers } = require('ethers');
 const config = require('../config');
 const contractArtifact = require('../../../contracts/artifacts/contracts/ViolenceReport.sol/ViolenceReport.json');
 
+function toContractHash(str) {
+    return str ? str.toLowerCase().replace(/^0x/, '') : str;
+}
+
 class BlockchainService {
     constructor() {
         this.provider = new ethers.JsonRpcProvider(config.PROVIDER_URL);
@@ -13,13 +17,16 @@ class BlockchainService {
         );
     }
 
-    async submitReport(violenceType, location, date, fileHash) {
+    async submitReport(reportHash, violenceType, location, relationWithPerpetrator, date, fileName) {
         try {
+            const hashString = toContractHash(reportHash);
             const tx = await this.contract.submitReport(
+                hashString,
                 violenceType,
                 location,
+                relationWithPerpetrator,
                 date,
-                fileHash
+                fileName
             );
             await tx.wait();
             return true;
@@ -29,9 +36,10 @@ class BlockchainService {
         }
     }
 
-    async verifyReport(fileHash) {
+    async verifyReport(reportHash) {
         try {
-            const exists = await this.contract.verifyReport(fileHash);
+            const hashString = toContractHash(reportHash);
+            const exists = await this.contract.verifyReport(hashString);
             return exists;
         } catch (error) {
             console.error('Error verifying report:', error);
@@ -39,28 +47,48 @@ class BlockchainService {
         }
     }
 
-    async getReport(fileHash) {
+    async getReport(reportHash) {
         try {
-            const report = await this.contract.getReport(fileHash);
+            const hashString = toContractHash(reportHash);
+            const report = await this.contract.getReport(hashString);
+            
+            // Check if report exists
+            if (!report || !report.exists) {
+                return null;
+            }
+            
             return {
+                reportHash,
                 violenceType: report.violenceType,
                 location: report.location,
+                relationWithPerpetrator: report.relationWithPerpetrator,
                 date: report.date.toString(),
-                fileHash: report.fileHash,
+                fileName: report.fileName,
                 exists: report.exists
             };
         } catch (error) {
             console.error('Error getting report:', error);
-            throw error;
+            // Return null instead of throwing error for non-existent reports
+            return null;
         }
     }
 
     async getAllReports() {
         try {
             const hashes = await this.contract.getAllReportHashes();
-            const reports = await Promise.all(
-                hashes.map(hash => this.getReport(hash))
-            );
+            const reports = [];
+            
+            for (const hash of hashes) {
+                try {
+                    const report = await this.getReport(hash);
+                    if (report) {
+                        reports.push(report);
+                    }
+                } catch (error) {
+                    console.error(`Error fetching report ${hash}:`, error);
+                }
+            }
+            
             return reports;
         } catch (error) {
             console.error('Error getting all reports:', error);

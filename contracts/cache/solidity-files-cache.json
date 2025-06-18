@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "D:\\BLOKHCHAIN\\SAFED\\sistem-pelaporan-kekerasan-main\\contracts\\contracts\\ViolenceReport.sol": {
-      "lastModificationDate": 1749784025155,
-      "contentHash": "38ade75e04828ba95a34e656151197b1",
+      "lastModificationDate": 1749882904897,
+      "contentHash": "1e79667fba9b6bc0db55085a6bacb136",
       "sourceName": "contracts/ViolenceReport.sol",
       "solcConfig": {
         "version": "0.8.20",

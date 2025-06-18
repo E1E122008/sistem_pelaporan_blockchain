@@ -1,62 +1,488 @@
 <script>
+import { ref, onMounted, onUnmounted } from 'vue';
+import blockchainService from './services/blockchain.service';
+
 export default {
-  name: 'App'
+  name: 'App',
+  setup() {
+    const loading = ref(false);
+    const connecting = ref(false);
+    const walletAddress = ref('');
+    const isScrolled = ref(false);
+
+    const handleScroll = () => {
+      isScrolled.value = window.scrollY > 50;
+    };
+
+    const connectWallet = async () => {
+      if (walletAddress.value) return;
+      
+      connecting.value = true;
+      try {
+        const address = await blockchainService.connect();
+        walletAddress.value = address;
+      } catch (error) {
+        console.error('Failed to connect wallet:', error);
+      } finally {
+        connecting.value = false;
+      }
+    };
+
+    onMounted(() => {
+      window.addEventListener('scroll', handleScroll);
+      
+      // Check if wallet is already connected
+      const savedAddress = localStorage.getItem('walletAddress');
+      if (savedAddress) {
+        walletAddress.value = savedAddress;
+      }
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener('scroll', handleScroll);
+    });
+
+    return {
+      loading,
+      connecting,
+      walletAddress,
+      isScrolled,
+      connectWallet
+    };
+  }
 };
 </script>
 
 <template>
   <v-app>
-    <v-app-bar color="primary">
-      <v-app-bar-title>
-        <router-link to="/" class="text-decoration-none text-white">
-          Sistem Pelaporan Kekerasan
-        </router-link>
-      </v-app-bar-title>
-      <v-spacer></v-spacer>
-      <v-btn
-        :to="{ name: 'Home' }"
-        variant="text"
-        class="text-white"
-      >
-        Beranda
-      </v-btn>
-      <v-btn
-        :to="{ name: 'ReportForm' }"
-        variant="text"
-        class="text-white"
-      >
-        Buat Laporan
-      </v-btn>
-      <v-btn
-        :to="{ name: 'VerifyReport' }"
-        variant="text"
-        class="text-white"
-      >
-        Verifikasi
-      </v-btn>
+    <!-- Navigation Header -->
+    <v-app-bar
+      app
+      elevation="0"
+      class="modern-navbar"
+      :class="{ 'navbar-scrolled': isScrolled }"
+    >
+      <div class="navbar-content">
+        <div class="navbar-brand" @click="$router.push({ name: 'Home' })">
+          <v-icon size="32" color="primary" class="mr-3">mdi-shield-account</v-icon>
+          <span class="brand-text">Sistem Pelaporan Kekerasan</span>
+        </div>
+        
+        <div class="navbar-menu">
+          <v-btn
+            variant="text"
+            @click="$router.push({ name: 'Home' })"
+            class="nav-btn"
+            :class="{ 'active': $route.name === 'Home' }"
+          >
+            <v-icon left>mdi-home</v-icon>
+            Beranda
+          </v-btn>
+          
+          <v-btn
+            variant="text"
+            @click="$router.push({ name: 'ReportForm' })"
+            class="nav-btn"
+            :class="{ 'active': $route.name === 'ReportForm' }"
+          >
+            <v-icon left>mdi-plus-circle</v-icon>
+            Buat Laporan
+          </v-btn>
+          
+          <v-btn
+            variant="text"
+            @click="$router.push({ name: 'VerifyReport' })"
+            class="nav-btn"
+            :class="{ 'active': $route.name === 'VerifyReport' }"
+          >
+            <v-icon left>mdi-magnify</v-icon>
+            Verifikasi
+          </v-btn>
+          
+          <v-btn
+            variant="text"
+            @click="$router.push({ name: 'AdminLogin' })"
+            class="nav-btn"
+            :class="{ 'active': $route.name === 'AdminLogin' }"
+          >
+            <v-icon left>mdi-file-document-outline</v-icon>
+            Daftar Laporan
+          </v-btn>
+        </div>
+        
+        <div class="navbar-actions">
+          <v-btn
+            color="primary"
+            variant="elevated"
+            @click="connectWallet"
+            :loading="connecting"
+            class="connect-btn"
+          >
+            <v-icon left>mdi-wallet</v-icon>
+            {{ walletAddress ? 'Connected' : 'Connect Wallet' }}
+          </v-btn>
+        </div>
+      </div>
     </v-app-bar>
 
-    <v-main>
-      <router-view></router-view>
+    <!-- Main Content -->
+    <v-main class="main-content">
+      <router-view />
     </v-main>
 
-    <v-footer app class="d-flex flex-column">
-      <div class="text-center w-100 py-2">
-        &copy; {{ new Date().getFullYear() }} — Sistem Pelaporan Kekerasan Berbasis Blockchain
-  </div>
+    <!-- Footer -->
+    <v-footer class="modern-footer">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3 class="footer-title">Sistem Pelaporan Kekerasan</h3>
+          <p class="footer-description">
+            Platform aman dan transparan untuk melaporkan kasus kekerasan dengan teknologi blockchain.
+          </p>
+        </div>
+        
+        <div class="footer-section">
+          <h4 class="footer-subtitle">Layanan</h4>
+          <ul class="footer-links">
+            <li><router-link to="/">Beranda</router-link></li>
+            <li><router-link to="/report">Buat Laporan</router-link></li>
+            <li><router-link to="/verify">Verifikasi</router-link></li>
+            <li><router-link to="/admin">Admin</router-link></li>
+          </ul>
+        </div>
+        
+        <div class="footer-section">
+          <h4 class="footer-subtitle">Teknologi</h4>
+          <ul class="footer-links">
+            <li>Blockchain Ethereum</li>
+            <li>Smart Contracts</li>
+            <li>Vue.js Frontend</li>
+            <li>Node.js Backend</li>
+          </ul>
+        </div>
+        
+        <div class="footer-section">
+          <h4 class="footer-subtitle">Kontak</h4>
+          <div class="contact-info">
+            <div class="contact-item">
+              <v-icon small>mdi-email</v-icon>
+              <span>support@violence-report.com</span>
+            </div>
+            <div class="contact-item">
+              <v-icon small>mdi-phone</v-icon>
+              <span>+62 123 456 789</span>
+            </div>
+            <div class="contact-item">
+              <v-icon small>mdi-map-marker</v-icon>
+              <span>Jakarta, Indonesia</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <v-divider class="footer-divider"></v-divider>
+      
+      <div class="footer-bottom">
+        <p>&copy; 2024 Sistem Pelaporan Kekerasan. All rights reserved.</p>
+        <div class="footer-social">
+          <v-btn icon size="small" variant="text">
+            <v-icon>mdi-facebook</v-icon>
+          </v-btn>
+          <v-btn icon size="small" variant="text">
+            <v-icon>mdi-twitter</v-icon>
+          </v-btn>
+          <v-btn icon size="small" variant="text">
+            <v-icon>mdi-instagram</v-icon>
+          </v-btn>
+          <v-btn icon size="small" variant="text">
+            <v-icon>mdi-linkedin</v-icon>
+          </v-btn>
+        </div>
+      </div>
     </v-footer>
+
+    <!-- Loading Overlay -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading...</p>
+      </div>
+    </div>
   </v-app>
 </template>
 
-<style>
-body {
-  background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
-  font-family: 'Inter', 'Roboto', Arial, sans-serif;
+<style scoped>
+/* Navigation Styles */
+.modern-navbar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.3s ease !important;
 }
-.v-application {
-  background: transparent !important;
+
+.navbar-scrolled {
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
 }
-.text-decoration-none {
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+  transform: scale(1.05);
+}
+
+.brand-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.navbar-menu {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-btn {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  color: #64748b !important;
+}
+
+.nav-btn:hover {
+  background: rgba(102, 126, 234, 0.1) !important;
+  color: #667eea !important;
+  transform: translateY(-2px) !important;
+}
+
+.nav-btn.active {
+  background: linear-gradient(45deg, #667eea, #764ba2) !important;
+  color: white !important;
+}
+
+.connect-btn {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  background: linear-gradient(45deg, #667eea, #764ba2) !important;
+  color: white !important;
+  transition: all 0.3s ease !important;
+}
+
+.connect-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Main Content */
+.main-content {
+  background: #f8fafc !important;
+  min-height: calc(100vh - 140px) !important;
+}
+
+/* Footer Styles */
+.modern-footer {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  color: white !important;
+  padding: 40px 20px 20px 20px !important;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  margin-bottom: 30px;
+}
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footer-description {
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.footer-subtitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #e2e8f0;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-links li {
+  margin-bottom: 8px;
+}
+
+.footer-links a {
+  color: #cbd5e1;
   text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: #667eea;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.footer-divider {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  margin: 20px 0 !important;
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.footer-social {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-social .v-btn {
+  color: #cbd5e1 !important;
+  transition: all 0.3s ease !important;
+}
+
+.footer-social .v-btn:hover {
+  color: #667eea !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loading-spinner {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar-content {
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px 20px;
+  }
+  
+  .navbar-menu {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .brand-text {
+    font-size: 1rem;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .footer-bottom {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-menu {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .nav-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>

@@ -23,9 +23,9 @@ const routes = [
         component: ReportForm
     },
     {
-        path: '/admin/reports',
+        path: '/reports',
         name: 'ReportList',
-        component: ReportList,
+        component: () => import('../views/ReportList.vue'),
         meta: { requiresAuth: true }
     },
     {
@@ -48,8 +48,8 @@ const router = createRouter({
 // Navigation guard for protected routes
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
-        const isAdmin = localStorage.getItem('adminWallet');
-        if (!isAdmin) {
+        const walletAddress = localStorage.getItem('walletAddress');
+        if (!walletAddress) {
             next({ name: 'AdminLogin' });
         } else {
             next();
