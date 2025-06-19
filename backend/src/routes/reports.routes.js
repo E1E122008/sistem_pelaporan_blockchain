@@ -5,17 +5,18 @@ const { adminAuth } = require('../middleware/auth.middleware');
 const blockchainService = require('../services/blockchain.service');
 const fileService = require('../services/file.service');
 const { hashReportData } = require('../utils/hashReport');
+const path = require('path');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Submit a new report (public)
 router.post('/submit', upload.single('file'), async (req, res) => {
     try {
-        const { violenceType, location, relationWithPerpetrator, date } = req.body;
+        const { violenceType, location, relationWithPerpetrator, date, reporterName, reporterContact } = req.body;
         let fileName = '';
         if (req.file) {
-            await fileService.saveFile(req.file);
-            fileName = req.file.originalname;
+            const saved = await fileService.saveFile(req.file);
+            fileName = saved ? path.basename(saved.path) : '';
         }
         const dataString = `${violenceType}|${location}|${relationWithPerpetrator}|${new Date(date).getTime()}|${fileName}`;
         const reportHash = hashReportData(
@@ -27,6 +28,11 @@ router.post('/submit', upload.single('file'), async (req, res) => {
         );
         console.log('DATA STRING UNTUK HASH:', dataString);
         console.log('HASH GABUNGAN:', reportHash);
+
+        // Simpan identitas pelapor jika ada
+        if (reporterName || reporterContact) {
+            fileService.saveReporterIdentity(reportHash, reporterName || '', reporterContact || '');
+        }
 
         await blockchainService.submitReport(
             reportHash,
@@ -67,7 +73,12 @@ router.get('/verify/:hash', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const reports = await blockchainService.getAllReports();
-        res.json(reports);
+        // Gabungkan data identitas pelapor
+        const reportsWithIdentity = reports.map(r => {
+            const identity = fileService.getReporterIdentity(r.reportHash);
+            return { ...r, reporterName: identity?.name || '', reporterContact: identity?.contact || '' };
+        });
+        res.json(reportsWithIdentity);
     } catch (error) {
         console.error('Error getting reports:', error);
         res.status(500).json({ error: 'Failed to get reports' });

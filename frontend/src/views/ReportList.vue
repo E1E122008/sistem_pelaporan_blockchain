@@ -65,6 +65,9 @@
                 <div class="header-cell">Tanggal</div>
                 <div class="header-cell">Hubungan dengan Pelaku</div>
                 <div class="header-cell">Hash Laporan</div>
+                <div class="header-cell">Bukti</div>
+                <div class="header-cell">Nama Pelapor</div>
+                <div class="header-cell">Kontak Pelapor</div>
               </div>
 
               <div class="table-body">
@@ -115,6 +118,30 @@
                         <v-icon size="16">mdi-content-copy</v-icon>
                       </v-btn>
                     </div>
+                  </div>
+                  <div class="table-cell">
+                    <template v-if="report.fileName">
+                      <v-btn
+                        :href="fileUrl(report.fileName)"
+                        target="_blank"
+                        color="info"
+                        size="small"
+                        variant="outlined"
+                        class="bukti-btn"
+                      >
+                        <v-icon left small>mdi-paperclip</v-icon>
+                        Lihat Bukti
+                      </v-btn>
+                    </template>
+                    <template v-else>
+                      <span style="color: #aaa;">Tidak ada</span>
+                    </template>
+                  </div>
+                  <div class="table-cell">
+                    {{ report.reporterName || '-' }}
+                  </div>
+                  <div class="table-cell">
+                    {{ report.reporterContact || '-' }}
                   </div>
                 </div>
               </div>
@@ -179,6 +206,11 @@ export default {
       router.push({ name: 'Home' });
     };
 
+    const fileUrl = (fileName) => {
+      if (!fileName) return '#';
+      return `http://localhost:3001/uploads/${fileName}`;
+    };
+
     onMounted(() => {
       fetchReports();
     });
@@ -189,7 +221,8 @@ export default {
       reports,
       formatDate,
       copyHash,
-      logout
+      logout,
+      fileUrl
     };
   }
 };
@@ -330,7 +363,7 @@ export default {
 
 .table-header {
   display: grid;
-  grid-template-columns: 80px 1fr 1fr 1fr 1fr 2fr;
+  grid-template-columns: 80px 1fr 1fr 1fr 1fr 2fr 1fr 1.2fr 1.2fr;
   gap: 20px;
   padding: 20px;
   background: linear-gradient(45deg, #667eea, #764ba2);
@@ -352,7 +385,7 @@ export default {
 
 .table-row {
   display: grid;
-  grid-template-columns: 80px 1fr 1fr 1fr 1fr 2fr;
+  grid-template-columns: 80px 1fr 1fr 1fr 1fr 2fr 1fr 1.2fr 1.2fr;
   gap: 20px;
   padding: 20px;
   border-bottom: 1px solid #f1f5f9;
@@ -400,9 +433,13 @@ export default {
   flex-shrink: 0;
 }
 
+.bukti-btn {
+  flex-shrink: 0;
+}
+
 @media (max-width: 1200px) {
   .table-header, .table-row {
-    grid-template-columns: 60px 1fr 1fr 1fr 1fr 1.5fr;
+    grid-template-columns: 60px 1fr 1fr 1fr 1fr 1.5fr 1fr;
     gap: 15px;
   }
   

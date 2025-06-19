@@ -4,6 +4,22 @@ const path = require('path');
 const config = require('../config');
 const { hashReportData } = require('../services/file.service');
 
+const REPORTER_DATA_PATH = path.join(__dirname, '../reporterData.json');
+
+function readReporterData() {
+    try {
+        if (!fs.existsSync(REPORTER_DATA_PATH)) return {};
+        const raw = fs.readFileSync(REPORTER_DATA_PATH, 'utf-8');
+        return JSON.parse(raw);
+    } catch (e) {
+        return {};
+    }
+}
+
+function writeReporterData(data) {
+    fs.writeFileSync(REPORTER_DATA_PATH, JSON.stringify(data, null, 2), 'utf-8');
+}
+
 class FileService {
     constructor() {
         // Create uploads directory if it doesn't exist
@@ -46,6 +62,17 @@ class FileService {
             console.error('Error verifying file:', error);
             throw error;
         }
+    }
+
+    saveReporterIdentity(reportHash, name, contact) {
+        const data = readReporterData();
+        data[reportHash] = { name, contact };
+        writeReporterData(data);
+    }
+
+    getReporterIdentity(reportHash) {
+        const data = readReporterData();
+        return data[reportHash] || null;
     }
 }
 

@@ -97,6 +97,32 @@
             </div>
           </div>
 
+          <div class="identity-section">
+            <v-alert type="info" variant="tonal" border="left" class="modern-alert mb-4">
+              Data Anda aman, hanya digunakan untuk verifikasi/tindak lanjut. (Opsional)
+            </v-alert>
+            <div class="identity-fields">
+              <v-text-field
+                v-model="formData.reporterName"
+                label="Nama Pelapor (Opsional)"
+                placeholder="Masukkan nama Anda"
+                prepend-inner-icon="mdi-account"
+                variant="outlined"
+                color="primary"
+                class="modern-input mb-3"
+              ></v-text-field>
+              <v-text-field
+                v-model="formData.reporterContact"
+                label="Email atau No. HP (Opsional)"
+                placeholder="Masukkan email atau nomor HP"
+                prepend-inner-icon="mdi-email"
+                variant="outlined"
+                color="primary"
+                class="modern-input"
+              ></v-text-field>
+            </div>
+          </div>
+
           <div class="file-upload-section">
             <label class="input-label">Upload Bukti</label>
             <div class="file-upload-card">
@@ -140,7 +166,6 @@
               border="left"
               elevation="2"
             >
-              <v-icon left>mdi-check-circle</v-icon>
               {{ success }}
             </v-alert>
           </div>
@@ -182,7 +207,9 @@ export default {
       location: '',
       relationWithPerpetrator: '',
       date: '',
-      file: null
+      file: null,
+      reporterName: '',
+      reporterContact: ''
     });
 
     const violenceTypes = [
@@ -212,7 +239,8 @@ export default {
         formDataToSend.append('location', formData.location);
         formDataToSend.append('relationWithPerpetrator', formData.relationWithPerpetrator);
         formDataToSend.append('date', formData.date);
-        
+        if (formData.reporterName) formDataToSend.append('reporterName', formData.reporterName);
+        if (formData.reporterContact) formDataToSend.append('reporterContact', formData.reporterContact);
         if (formData.file) {
           formDataToSend.append('file', formData.file);
         }

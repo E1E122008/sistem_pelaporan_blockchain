@@ -114,12 +114,11 @@ export default {
           <v-btn
             color="primary"
             variant="elevated"
-            @click="connectWallet"
-            :loading="connecting"
+            @click="$router.push({ name: 'ReportList' })"
             class="connect-btn"
           >
             <v-icon left>mdi-wallet</v-icon>
-            {{ walletAddress ? 'Connected' : 'Connect Wallet' }}
+            {{ walletAddress ? 'Connected' : 'Not Connected' }}
           </v-btn>
         </div>
       </div>
@@ -131,72 +130,9 @@ export default {
     </v-main>
 
     <!-- Footer -->
-    <v-footer class="modern-footer">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h3 class="footer-title">Sistem Pelaporan Kekerasan</h3>
-          <p class="footer-description">
-            Platform aman dan transparan untuk melaporkan kasus kekerasan dengan teknologi blockchain.
-          </p>
-        </div>
-        
-        <div class="footer-section">
-          <h4 class="footer-subtitle">Layanan</h4>
-          <ul class="footer-links">
-            <li><router-link to="/">Beranda</router-link></li>
-            <li><router-link to="/report">Buat Laporan</router-link></li>
-            <li><router-link to="/verify">Verifikasi</router-link></li>
-            <li><router-link to="/admin">Admin</router-link></li>
-          </ul>
-        </div>
-        
-        <div class="footer-section">
-          <h4 class="footer-subtitle">Teknologi</h4>
-          <ul class="footer-links">
-            <li>Blockchain Ethereum</li>
-            <li>Smart Contracts</li>
-            <li>Vue.js Frontend</li>
-            <li>Node.js Backend</li>
-          </ul>
-        </div>
-        
-        <div class="footer-section">
-          <h4 class="footer-subtitle">Kontak</h4>
-          <div class="contact-info">
-            <div class="contact-item">
-              <v-icon small>mdi-email</v-icon>
-              <span>support@violence-report.com</span>
-            </div>
-            <div class="contact-item">
-              <v-icon small>mdi-phone</v-icon>
-              <span>+62 123 456 789</span>
-            </div>
-            <div class="contact-item">
-              <v-icon small>mdi-map-marker</v-icon>
-              <span>Jakarta, Indonesia</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <v-divider class="footer-divider"></v-divider>
-      
-      <div class="footer-bottom">
-        <p>&copy; 2024 Sistem Pelaporan Kekerasan. All rights reserved.</p>
-        <div class="footer-social">
-          <v-btn icon size="small" variant="text">
-            <v-icon>mdi-facebook</v-icon>
-          </v-btn>
-          <v-btn icon size="small" variant="text">
-            <v-icon>mdi-twitter</v-icon>
-          </v-btn>
-          <v-btn icon size="small" variant="text">
-            <v-icon>mdi-instagram</v-icon>
-          </v-btn>
-          <v-btn icon size="small" variant="text">
-            <v-icon>mdi-linkedin</v-icon>
-          </v-btn>
-        </div>
+    <v-footer class="modern-footer" style="display: flex; justify-content: center; align-items: center; min-height: 56px;">
+      <div class="footer-bottom" style="width:100%; display: flex; justify-content: center; align-items: center;">
+        <p style="margin: 0; text-align: center;">&copy; 2025 – Sistem Pelaporan Kekerasan Berbasis Blockchain</p>
       </div>
     </v-footer>
 
@@ -387,21 +323,6 @@ export default {
   margin: 0 auto;
   color: #94a3b8;
   font-size: 0.9rem;
-}
-
-.footer-social {
-  display: flex;
-  gap: 10px;
-}
-
-.footer-social .v-btn {
-  color: #cbd5e1 !important;
-  transition: all 0.3s ease !important;
-}
-
-.footer-social .v-btn:hover {
-  color: #667eea !important;
-  transform: translateY(-2px) !important;
 }
 
 /* Loading Overlay */
