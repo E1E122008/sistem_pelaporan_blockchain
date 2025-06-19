@@ -1,81 +1,47 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
-contract ViolenceReport {
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract ViolenceReport is Ownable {
     struct Report {
-        string violenceType;
-        string location;
-        string relationWithPerpetrator;
-        uint256 date;
-        string fileName;
+        string reportHash;
+        uint256 timestamp;
         bool exists;
     }
     
-    mapping(string => Report) public reports;
-    string[] public allReportHashes;
-    
-    event ReportSubmitted(
-        string reportHash,
-        string violenceType,
-        string location,
-        string relationWithPerpetrator,
-        uint256 date,
-        string fileName
-    );
-    
-    function submitReport(
-        string memory _reportHash,
-        string memory _violenceType,
-        string memory _location,
-        string memory _relationWithPerpetrator,
-        uint256 _date,
-        string memory _fileName
-    ) public {
-        require(bytes(_reportHash).length > 0, "Report hash cannot be empty");
-        require(!reports[_reportHash].exists, "Report with this hash already exists");
+    mapping(string => Report) private reports;
+    string[] private reportHashes;
+
+    event ReportSubmitted(string reportHash, uint256 timestamp);
+    event ReportVerified(string reportHash, bool verified, uint256 timestamp);
+
+    constructor() Ownable(msg.sender) {}
+
+    function submitReport(string memory _reportHash) public onlyOwner {
+        require(!reports[_reportHash].exists, "Report already exists");
         
         reports[_reportHash] = Report({
-            violenceType: _violenceType,
-            location: _location,
-            relationWithPerpetrator: _relationWithPerpetrator,
-            date: _date,
-            fileName: _fileName,
+            reportHash: _reportHash,
+            timestamp: block.timestamp,
             exists: true
         });
+        reportHashes.push(_reportHash);
         
-        allReportHashes.push(_reportHash);
+        emit ReportSubmitted(_reportHash, block.timestamp);
+    }
+
+    function verifyReport(string memory _reportHash) public view returns (bool) {
+        return reports[_reportHash].exists;
+    }
+
+    function getAllReports() public view returns (Report[] memory) {
+        Report[] memory allReports = new Report[](reportHashes.length);
         
-        emit ReportSubmitted(_reportHash, _violenceType, _location, _relationWithPerpetrator, _date, _fileName);
-    }
-    
-    function verifyReport(string memory _fileHash) public view returns (bool) {
-        return reports[_fileHash].exists;
-    }
-    
-    function getReport(string memory _reportHash) public view returns (
-        string memory violenceType,
-        string memory location,
-        string memory relationWithPerpetrator,
-        uint256 date,
-        string memory fileName,
-        bool exists
-    ) {
-        Report memory report = reports[_reportHash];
-        return (
-            report.violenceType,
-            report.location,
-            report.relationWithPerpetrator,
-            report.date,
-            report.fileName,
-            report.exists
-        );
-    }
-    
-    function getAllReportHashes() public view returns (string[] memory) {
-        return allReportHashes;
-    }
-    
-    function getReportCount() public view returns (uint256) {
-        return allReportHashes.length;
+        for(uint i = 0; i < reportHashes.length; i++) {
+            allReports[i] = reports[reportHashes[i]];
+        }
+        
+        return allReports;
     }
 } 

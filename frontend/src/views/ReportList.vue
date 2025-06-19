@@ -63,6 +63,7 @@
                 <div class="header-cell">Jenis Kekerasan</div>
                 <div class="header-cell">Lokasi</div>
                 <div class="header-cell">Tanggal</div>
+                <div class="header-cell">Tanggal Submit</div>
                 <div class="header-cell">Hubungan dengan Pelaku</div>
                 <div class="header-cell">Hash Laporan</div>
                 <div class="header-cell">Bukti</div>
@@ -96,7 +97,13 @@
                   <div class="table-cell">
                     <div class="date">
                       <v-icon left small color="green">mdi-calendar</v-icon>
-                      {{ formatDate(report.date) }}
+                      {{ formatIncidentDate(report.date) }}
+                    </div>
+                  </div>
+                  <div class="table-cell">
+                    <div class="date">
+                      <v-icon left small color="purple">mdi-calendar-clock</v-icon>
+                      {{ formatSubmitDate(report.timestamp) }}
                     </div>
                   </div>
                   <div class="table-cell">
@@ -138,10 +145,16 @@
                     </template>
                   </div>
                   <div class="table-cell">
-                    {{ report.reporterName || '-' }}
+                    <div class="reporter-name">
+                      <v-icon left small color="teal">mdi-account</v-icon>
+                      {{ report.reporterName || '-' }}
+                    </div>
                   </div>
                   <div class="table-cell">
-                    {{ report.reporterContact || '-' }}
+                    <div class="reporter-contact">
+                      <v-icon left small color="orange">mdi-phone</v-icon>
+                      {{ report.reporterContact || '-' }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -173,6 +186,14 @@ export default {
 
       try {
         const data = await apiService.getAllReports();
+        console.log('Raw reports data:', data);
+        data.forEach(report => {
+          console.log('Report submitDate:', {
+            raw: report.submitDate,
+            type: typeof report.submitDate,
+            parsed: new Date(parseInt(report.submitDate))
+          });
+        });
         reports.value = data;
       } catch (err) {
         error.value = err.message || 'Failed to fetch reports';
@@ -184,11 +205,30 @@ export default {
       }
     };
 
-    const formatDate = (timestamp) => {
-      return new Date(parseInt(timestamp)).toLocaleDateString('id-ID', {
-        year: 'numeric',
+    const formatIncidentDate = (date) => {
+      if (!date) return '-';
+      const d = new Date(date);
+      return d.toLocaleDateString('id-ID', {
+        timeZone: 'Asia/Makassar',
+        day: '2-digit',
         month: 'long',
-        day: 'numeric'
+        year: 'numeric'
+      });
+    };
+
+    const formatSubmitDate = (timestamp) => {
+      if (!timestamp) return '-';
+      const ts = typeof timestamp === 'string' ? parseInt(timestamp) : timestamp;
+      if (!ts) return '-';
+      const d = new Date(ts * 1000);
+      return d.toLocaleString('id-ID', {
+        timeZone: 'Asia/Makassar',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
       });
     };
 
@@ -219,7 +259,8 @@ export default {
       loading,
       error,
       reports,
-      formatDate,
+      formatIncidentDate,
+      formatSubmitDate,
       copyHash,
       logout,
       fileUrl
@@ -325,127 +366,227 @@ export default {
 }
 
 .table-container {
-  background: #f8fafc;
-  border-radius: 20px;
-  overflow: hidden;
+  overflow-x: auto;
+  width: 100%;
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
-}
-
-.loading-container, .empty-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.loading-text {
-  margin-top: 20px;
-  color: #64748b;
-  font-size: 1.1rem;
-}
-
-.empty-container h3 {
-  margin: 20px 0 10px 0;
-  color: #1e293b;
-  font-size: 1.5rem;
-}
-
-.empty-container p {
-  color: #64748b;
-  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin: 20px 0;
 }
 
 .reports-table {
+  width: 100%;
   background: white;
+  min-width: 2000px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-.table-header {
+.table-header{
   display: grid;
-  grid-template-columns: 80px 1fr 1fr 1fr 1fr 2fr 1fr 1.2fr 1.2fr;
-  gap: 20px;
-  padding: 20px;
-  background: linear-gradient(45deg, #667eea, #764ba2);
-  color: white;
+  background: linear-gradient(90deg, #7b2ff2 0%, #f357a8 100%);
+  color: #fff;
   font-weight: 600;
+  padding: 16px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  grid-template-columns:
+    80px    /* No. */
+    220px   /* Jenis Kekerasan */
+    220px   /* Lokasi */
+    180px   /* Tanggal */
+    260px   /* Tanggal Submit */
+    220px   /* Hubungan dengan Pelaku */
+    350px   /* Hash Laporan */
+    150px   /* Bukti */
+    160px   /* Nama Pelapor */
+    150px;  /* Kontak Pelapor */
+  align-items: center;
 }
 
-.header-cell {
-  padding: 10px;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.table-body {
-  max-height: 600px;
-  overflow-y: auto;
+.header-cell, .table-cell {
+  padding: 8px;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .table-row {
   display: grid;
-  grid-template-columns: 80px 1fr 1fr 1fr 1fr 2fr 1fr 1.2fr 1.2fr;
-  gap: 20px;
-  padding: 20px;
+  padding: 12px 8px;
+  grid-template-columns:
+    80px    /* No. */
+    220px   /* Jenis Kekerasan */
+    220px   /* Lokasi */
+    180px   /* Tanggal */
+    260px   /* Tanggal Submit */
+    220px   /* Hubungan dengan Pelaku */
+    350px   /* Hash Laporan */
+    150px   /* Bukti */
+    160px   /* Nama Pelapor */
+    150px;  /* Kontak Pelapor */
+  align-items: center;
   border-bottom: 1px solid #f1f5f9;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
 .table-row:hover {
-  background: #f8fafc;
-  transform: translateX(5px);
+  background-color: #f8fafc;
 }
 
-.table-cell {
-  padding: 10px;
-  display: flex;
-  align-items: center;
-}
-
-.violence-type, .location, .date, .relation {
+/* Style untuk setiap tipe kolom */
+.violence-type,
+.location,
+.date,
+.relation,
+.reporter-name,
+.reporter-contact {
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.violence-type {
+  color: #e11d48;
+  font-weight: 500;
+}
+
+.location {
+  color: #1d4ed8;
+}
+
+.date {
+  color: #047857;
+}
+
+.relation {
+  color: #6366f1;
+}
+
+.reporter-name {
+  color: #0f766e;
+  font-weight: 500;
+}
+
+.reporter-contact {
+  color: #ea580c;
   font-weight: 500;
 }
 
 .hash-cell {
-  max-width: 100%;
+  overflow: hidden;
+  max-width: 320px;
 }
 
 .hash-content {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 
 .hash-text {
-  font-family: 'Courier New', monospace;
-  font-size: 0.8rem;
-  color: #64748b;
-  word-break: break-all;
-  flex: 1;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+  font-size: 0.9em;
+  background: #f3f4f6;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .copy-btn {
   flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.copy-btn:hover {
+  opacity: 1;
 }
 
 .bukti-btn {
-  flex-shrink: 0;
+  width: 100%;
+  max-width: 100px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Styling untuk nomor dan pelapor */
+.table-cell:first-child {
+  justify-content: center;
+  text-align: center;
+}
+
+.table-cell:nth-last-child(2) {
+  color: #8b5cf6;
+  font-weight: 600;
+}
+
+.table-cell:nth-last-child(1) {
+  color: #ec4899;
+  font-weight: 600;
+}
+
+.loading-container, .empty-container {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  background: white;
+  border-radius: 16px;
+}
+
+.loading-text {
+  margin-top: 16px;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.empty-container h3 {
+  margin: 16px 0 8px;
+  color: #374151;
+  font-size: 1.5rem;
+}
+
+.empty-container p {
+  color: #6b7280;
 }
 
 @media (max-width: 1200px) {
-  .table-header, .table-row {
-    grid-template-columns: 60px 1fr 1fr 1fr 1fr 1.5fr 1fr;
-    gap: 15px;
+  .reports-table {
+    min-width: 1800px;
   }
-  
   .header-cell, .table-cell {
-    padding: 8px;
-    font-size: 0.85rem;
+    font-size: 13px;
   }
 }
 

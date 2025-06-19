@@ -104,7 +104,7 @@
                       <v-icon left color="green">mdi-calendar</v-icon>
                       Tanggal Kejadian
                     </div>
-                    <div class="detail-value">{{ formatDate(report.date) }}</div>
+                    <div class="detail-value">{{ formatIncidentDate(report.date) }}</div>
                   </div>
 
                   <div class="detail-item">
@@ -216,11 +216,30 @@ export default {
       }
     };
 
-    const formatDate = (timestamp) => {
-      return new Date(parseInt(timestamp)).toLocaleDateString('id-ID', {
-        year: 'numeric',
+    const formatIncidentDate = (date) => {
+      if (!date) return '-';
+      const d = new Date(date);
+      return d.toLocaleDateString('id-ID', {
+        timeZone: 'Asia/Makassar',
+        day: '2-digit',
         month: 'long',
-        day: 'numeric'
+        year: 'numeric'
+      });
+    };
+
+    const formatSubmitDate = (timestamp) => {
+      if (!timestamp) return '-';
+      const ts = typeof timestamp === 'string' ? parseInt(timestamp) : timestamp;
+      if (!ts) return '-';
+      const d = new Date(ts * 1000);
+      return d.toLocaleString('id-ID', {
+        timeZone: 'Asia/Makassar',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
       });
     };
 
@@ -244,7 +263,8 @@ export default {
       error,
       loading,
       verifyReport,
-      formatDate,
+      formatIncidentDate,
+      formatSubmitDate,
       copyHash,
       clearError
     };

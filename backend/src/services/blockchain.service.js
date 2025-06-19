@@ -17,21 +17,46 @@ class BlockchainService {
         );
     }
 
-    async submitReport(reportHash, violenceType, location, relationWithPerpetrator, date, fileName) {
+    async submitReport(reportData) {
         try {
-            const hashString = toContractHash(reportHash);
-            const tx = await this.contract.submitReport(
-                hashString,
-                violenceType,
-                location,
-                relationWithPerpetrator,
-                date,
-                fileName
-            );
-            await tx.wait();
-            return true;
+            const contract = await this.contract;
+            
+            console.log('Submitting report with data:', reportData);
+            console.log('Report hash:', reportData.reportHash);
+            
+            // Hanya kirim reportHash ke smart contract
+            const tx = await contract.submitReport(reportData.reportHash);
+            const receipt = await tx.wait();
+            
+            // Get timestamp from event (with proper error handling)
+            let timestamp = null;
+            if (receipt.events && Array.isArray(receipt.events)) {
+                const event = receipt.events.find(e => e.event === 'ReportSubmitted');
+                if (event && event.args) {
+                    timestamp = event.args.timestamp;
+                }
+            }
+            
+            // If we can't get timestamp from event, use current time
+            if (!timestamp) {
+                timestamp = Math.floor(Date.now() / 1000);
+                console.log('Could not get timestamp from event, using current time');
+            }
+            
+            console.log('Report submitted to blockchain at:', new Date(Number(timestamp) * 1000).toLocaleString('id-ID', {
+                timeZone: 'Asia/Makassar',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }));
+            
+            return receipt;
         } catch (error) {
-            console.error('Error submitting report:', error);
+            console.error('Error submitting report to blockchain:', error);
             throw error;
         }
     }
@@ -50,21 +75,16 @@ class BlockchainService {
     async getReport(reportHash) {
         try {
             const hashString = toContractHash(reportHash);
-            const report = await this.contract.getReport(hashString);
+            const exists = await this.contract.verifyReport(hashString);
             
-            // Check if report exists
-            if (!report || !report.exists) {
+            if (!exists) {
                 return null;
             }
             
+            // Since the contract only stores basic info, we return what we can
             return {
                 reportHash,
-                violenceType: report.violenceType,
-                location: report.location,
-                relationWithPerpetrator: report.relationWithPerpetrator,
-                date: report.date.toString(),
-                fileName: report.fileName,
-                exists: report.exists
+                exists: true
             };
         } catch (error) {
             console.error('Error getting report:', error);
@@ -75,23 +95,27 @@ class BlockchainService {
 
     async getAllReports() {
         try {
-            const hashes = await this.contract.getAllReportHashes();
-            const reports = [];
+            const contract = await this.contract;
+            const reports = await contract.getAllReports();
             
-            for (const hash of hashes) {
-                try {
-                    const report = await this.getReport(hash);
-                    if (report) {
-                        reports.push(report);
-                    }
-                } catch (error) {
-                    console.error(`Error fetching report ${hash}:`, error);
-                }
-            }
+            // Format timestamps for each report
+            reports.forEach(report => {
+                const timestamp = Number(report.timestamp) * 1000; // Convert to milliseconds
+                console.log('Report', report.reportHash, 'timestamp:', new Date(timestamp).toLocaleString('id-ID', {
+                    timeZone: 'Asia/Makassar',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }));
+            });
             
             return reports;
         } catch (error) {
-            console.error('Error getting all reports:', error);
+            console.error('Error getting reports from blockchain:', error);
             throw error;
         }
     }

@@ -2,9 +2,8 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
-const { hashReportData } = require('../services/file.service');
 
-const REPORTER_DATA_PATH = path.join(__dirname, '../reporterData.json');
+const REPORTER_DATA_PATH = path.join(__dirname, '../reportData.json');
 
 function readReporterData() {
     try {
@@ -64,13 +63,13 @@ class FileService {
         }
     }
 
-    saveReporterIdentity(reportHash, name, contact) {
+    saveReportDetails(reportHash, details) {
         const data = readReporterData();
-        data[reportHash] = { name, contact };
+        data[reportHash] = details;
         writeReporterData(data);
     }
 
-    getReporterIdentity(reportHash) {
+    getReportDetails(reportHash) {
         const data = readReporterData();
         return data[reportHash] || null;
     }

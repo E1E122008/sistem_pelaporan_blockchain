@@ -12,45 +12,55 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Submit a new report (public)
 router.post('/submit', upload.single('file'), async (req, res) => {
     try {
+        const timestamp = Date.now();
+        const localTime = new Date(timestamp).toLocaleString('id-ID', {
+            timeZone: 'Asia/Makassar',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        console.log('Report submission timestamp:', timestamp, '- Waktu WITA:', localTime);
+
         const { violenceType, location, relationWithPerpetrator, date, reporterName, reporterContact } = req.body;
         let fileName = '';
+
         if (req.file) {
-            const saved = await fileService.saveFile(req.file);
-            fileName = saved ? path.basename(saved.path) : '';
+            // Generate hash for the file and use it as filename
+            const crypto = require('crypto');
+            const fileHash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+            fileName = `${fileHash}${req.file.originalname ? path.extname(req.file.originalname) : ''}`;
         }
-        const dataString = `${violenceType}|${location}|${relationWithPerpetrator}|${new Date(date).getTime()}|${fileName}`;
-        const reportHash = hashReportData(
-            violenceType,
-            location,
-            relationWithPerpetrator,
-            new Date(date).getTime(),
-            fileName
-        );
-        console.log('DATA STRING UNTUK HASH:', dataString);
+
+        // Generate report hash
+        const reportHash = hashReportData(violenceType, location, relationWithPerpetrator, date, fileName);
         console.log('HASH GABUNGAN:', reportHash);
 
-        // Simpan identitas pelapor jika ada
-        if (reporterName || reporterContact) {
-            fileService.saveReporterIdentity(reportHash, reporterName || '', reporterContact || '');
-        }
+        // Submit to blockchain
+        await blockchainService.submitReport({ reportHash });
 
-        await blockchainService.submitReport(
-            reportHash,
+        // Save all report details
+        fileService.saveReportDetails(reportHash, {
             violenceType,
             location,
             relationWithPerpetrator,
-            new Date(date).getTime(),
+            date,
+            reporterName: reporterName || '',
+            reporterContact: reporterContact || '',
             fileName
-        );
+        });
 
-        res.status(201).json({
+        res.status(200).json({
             message: 'Report submitted successfully',
             reportHash,
-            dataString
+            fileName
         });
     } catch (error) {
         console.error('Error submitting report:', error);
-        res.status(500).json({ error: 'Failed to submit report' });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -59,26 +69,33 @@ router.get('/verify/:hash', async (req, res) => {
     try {
         const report = await blockchainService.getReport(req.params.hash);
         if (report) {
-            res.json(report);
+            const details = fileService.getReportDetails(req.params.hash);
+            res.json({
+                ...report,
+                ...details
+            });
         } else {
             res.status(404).json({ error: 'Report not found' });
         }
     } catch (error) {
-        console.error('Error verifying report:', error);
         res.status(500).json({ error: 'Failed to verify report' });
     }
 });
 
 // Get all reports (admin only)
+
 router.get('/', async (req, res) => {
     try {
         const reports = await blockchainService.getAllReports();
-        // Gabungkan data identitas pelapor
-        const reportsWithIdentity = reports.map(r => {
-            const identity = fileService.getReporterIdentity(r.reportHash);
-            return { ...r, reporterName: identity?.name || '', reporterContact: identity?.contact || '' };
+        const reportsWithDetails = reports.map(r => {
+            const details = fileService.getReportDetails(r.reportHash) || {};
+            return {
+                reportHash: r.reportHash || details.reportHash || '',
+                timestamp: r.timestamp ? Number(r.timestamp) : undefined,
+                ...details
+            };
         });
-        res.json(reportsWithIdentity);
+        res.json(reportsWithDetails);
     } catch (error) {
         console.error('Error getting reports:', error);
         res.status(500).json({ error: 'Failed to get reports' });
@@ -103,10 +120,45 @@ router.get('/details/:hash', adminAuth, async (req, res) => {
 // Endpoint debug: tampilkan semua hash laporan di contract
 router.get('/all-hashes', async (req, res) => {
     try {
-        const hashes = await blockchainService.contract.getAllReportHashes();
+        const reports = await blockchainService.getAllReports();
+        const hashes = reports.map(report => report.reportHash);
         res.json(hashes);
     } catch (error) {
         res.status(500).json({ error: 'Failed to get all hashes' });
+    }
+});
+
+// Debug endpoint: check contract function signatures
+router.get('/debug/contract', async (req, res) => {
+    try {
+        const contract = blockchainService.contract;
+        const abi = contract.interface.fragments.map(f => ({
+            name: f.name,
+            type: f.type,
+            inputs: f.inputs?.map(i => ({ name: i.name, type: i.type })) || []
+        }));
+        res.json({
+            address: await contract.getAddress(),
+            abi: abi
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Test endpoint: verify contract connection
+router.get('/test/contract', async (req, res) => {
+    try {
+        const contract = blockchainService.contract;
+        const address = await contract.getAddress();
+        const owner = await contract.owner();
+        res.json({
+            contractAddress: address,
+            owner: owner,
+            status: 'Connected'
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
