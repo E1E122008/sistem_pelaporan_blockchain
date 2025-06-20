@@ -162,4 +162,10 @@ router.get('/test/contract', async (req, res) => {
     }
 });
 
+// Tambahkan endpoint untuk expose admin wallet ke frontend
+router.get('/admin-wallet', (req, res) => {
+    const config = require('../config');
+    res.json({ adminWallet: config.ADMIN_WALLET });
+});
+
 module.exports = router; 

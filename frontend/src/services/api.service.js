@@ -63,6 +63,16 @@ class ApiService {
             throw error;
         }
     }
+
+    async getAdminWallet() {
+        try {
+            const response = await this.api.get('/reports/admin-wallet');
+            return response.data;
+        } catch (error) {
+            console.error('Error getting admin wallet:', error);
+            throw error;
+        }
+    }
 }
 
 export default new ApiService(); 

@@ -172,6 +172,8 @@ import { useRouter } from 'vue-router';
 import apiService from '../services/api.service';
 import blockchainService from '../services/blockchain.service';
 
+const ADMIN_WALLET = import.meta.env.VITE_ADMIN_WALLET?.toLowerCase();
+
 export default {
   name: 'ReportList',
   setup() {
@@ -251,7 +253,20 @@ export default {
       return `http://localhost:3001/uploads/${fileName}`;
     };
 
-    onMounted(() => {
+    onMounted(async () => {
+      // Cek wallet admin dari backend
+      try {
+        const address = await blockchainService.getWalletAddress();
+        const { adminWallet } = await apiService.getAdminWallet();
+        if (!adminWallet || address.toLowerCase() !== adminWallet.toLowerCase()) {
+          router.push({ name: 'AccessDenied' });
+          return;
+        }
+      } catch (err) {
+        // Jika wallet belum connect, redirect juga
+        router.push({ name: 'AccessDenied' });
+        return;
+      }
       fetchReports();
     });
 
