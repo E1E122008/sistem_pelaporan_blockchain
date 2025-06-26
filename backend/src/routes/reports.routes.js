@@ -29,9 +29,10 @@ router.post('/submit', upload.single('file'), async (req, res) => {
         let fileName = '';
 
         if (req.file) {
-            // Generate hash for the file and use it as filename
-            const crypto = require('crypto');
-            const fileHash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+            // Simpan file ke folder uploads
+            await fileService.saveFile(req.file);
+            // Generate hash untuk nama file (sudah dilakukan di saveFile, bisa ambil dari return value)
+            const fileHash = fileService.calculateHash(req.file.buffer);
             fileName = `${fileHash}${req.file.originalname ? path.extname(req.file.originalname) : ''}`;
         }
 
