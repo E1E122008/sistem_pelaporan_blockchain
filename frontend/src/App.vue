@@ -147,6 +147,22 @@ export default {
 </template>
 
 <style scoped>
+:deep(.v-application__wrap) {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.v-main) {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(footer.v-footer) {
+  flex-grow: 0;
+}
+
 /* Navigation Styles */
 .modern-navbar {
   background: rgba(255, 255, 255, 0.95) !important;
